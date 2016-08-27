@@ -1,4 +1,9 @@
- Debug/
- Release/
- *.VC.db
- *.exe
+/src/ComunicacaoTcp/ComunicacaoTcp.VC.VC.opendb
+/src/ComunicacaoTcp/Common/Debug
+/src/ComunicacaoTcp/Common/Release
+/src/ComunicacaoTcp/Server/Debug
+/src/ComunicacaoTcp/Server/Release
+/src/ComunicacaoTcp/Client/Debug
+/src/ComunicacaoTcp/Client/Release
+/src/ComunicacaoTcp/Debug
+/src/ComunicacaoTcp/Release

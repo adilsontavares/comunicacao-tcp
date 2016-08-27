@@ -4,7 +4,9 @@
 #include <thread>
 #include <cstdlib>
 #include <locale>
-#include "Errors.h"
+
+#include "Error.h"
+#include "Console.h"
 
 using namespace std;
 
@@ -12,7 +14,6 @@ struct Client
 {
 	int ssock;
 	int csock;
-
 };
 
 void handleClient(Client *client);
@@ -26,30 +27,17 @@ int main(int argc, char *argv[])
 	WSAStartup(MAKEWORD(2, 2), &data);
 
 	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sock < 0)
-	{
-		cerr << "Não foi possível inicializar o socket." << endl;
-		return 1;
-	}
+	Error::assert(sock != SOCKET_ERROR, "Não foi possível inicializar o socket.");
 
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(9999);
 	inet_pton(AF_INET, "0.0.0.0", &addr.sin_addr.s_addr);
 
-	if (::bind(sock, (sockaddr*)&addr, sizeof(addr)) < 0)
-	{
-		cerr << "Não foi possível realizar o bind." << endl;
-		return 1;
-	}
+	Error::assert(::bind(sock, (sockaddr*)&addr, sizeof(addr)) >= 0, "Não foi possível realizar o bind.");
+	Error::assert(listen(sock, SOMAXCONN) != SOCKET_ERROR, "Não foi possível iniciar a escuta por clientes.");
 
-	if (listen(sock, SOMAXCONN) < 0)
-	{
-		cerr << "Não foi possível iniciar a escuta por clientes." << endl;
-		return 1;
-	}
-
-	cout << "Aguardando conexões de clientes..." << endl;
+	Console::log("Aguardando conexões de clientes...");
 
 	while (true)
 	{
@@ -59,7 +47,7 @@ int main(int argc, char *argv[])
 		int csock = accept(sock, (sockaddr*)&caddr, &caddrlen);
 		if (csock < 0) 
 		{
-			cerr << "Erro ao aceitar a conexão de um cliente." << endl;
+			Console::error("Erro ao aceitar a conexão de um cliente.");
 			continue;
 		}
 
@@ -77,7 +65,7 @@ int main(int argc, char *argv[])
 
 void handleClient(Client * client)
 {
-	cout << "Cliente conectado: " << client->csock << endl;
+	Console::log("Cliente conectado: %d", client->csock);
 
 	char buffer[1024];
 	int bytes;
@@ -88,13 +76,13 @@ void handleClient(Client * client)
 
 		if (bytes == SOCKET_ERROR)
 		{
-			cerr << "Ocorreu um erro ao receber dados do cliente " << client->csock << endl;
+			Console::error("Ocorreu um erro ao receber dados do cliente %d.", client->csock);
 			break;
 		}
 
 		if (bytes < 0)
 		{
-			cerr << "A conexão com o cliente " << client->csock << " foi encerrada." << endl;
+			Console::error("A conexão com o cliente %d foi encerrada.", client->csock);
 			return;
 		}
 
@@ -102,17 +90,21 @@ void handleClient(Client * client)
 		handleClientMessage(client, buffer, bytes);
 	}
 
-	cout << "Desconectando cliente: " << client->csock << "... ";
+	Console::log("Desconectando cliente: %d... ", client->csock);
 	closesocket(client->csock);
-	cout << "OK" << endl;
+	Console::log("Cliente %d desconectado.", client->csock);
 }
 
 void handleClientMessage(Client * client, const char * message, size_t size)
 {
-	cout << "Cliente " << client->csock << " enviou: " << message << endl;
+	Console::writeLine("O cliente %d enviou: %s", client->csock, message);
 
-	char buffer[] = "Recebi sua mensagem!!!";
+	char *buffer = new char[size + 1];
+	buffer[size] = '\0';
+
+	for (int i = 0; i < size; ++i)
+		buffer[i] = toupper(message[i]);
 
 	if (send(client->csock, buffer, strlen(buffer), 0) == SOCKET_ERROR)
-		cerr << "Erro ao responder echo ao cliente " << client->csock << endl;
+		Console::error("Erro ao responder echo ao cliente %d.", client->csock);
 }

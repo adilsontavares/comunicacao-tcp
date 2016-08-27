@@ -4,7 +4,8 @@
 #include <thread>
 #include <cstdlib>
 #include <locale>
-#include "Errors.h"
+#include "Error.h"
+#include "Console.h"
 
 using namespace std;
 
@@ -24,11 +25,7 @@ int main(int argc, char *argv[])
 	WSAStartup(MAKEWORD(2, 2), &data);
 
 	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sock < 0)
-	{
-		cerr << "Não foi possível inicializar o socket." << endl;
-		return 1;
-	}
+	Error::assert(sock != SOCKET_ERROR, "Não foi possível inicializar o socket.");
 
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
@@ -36,13 +33,9 @@ int main(int argc, char *argv[])
 	inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
 
 	int csock = connect(sock, (sockaddr*)&addr, sizeof(addr));
-	if (csock < 0)
-	{
-		cerr << "Não foi possível se conectar ao servidor." << endl;
-		return 1;
-	}
+	Error::assert(csock != SOCKET_ERROR, "Não foi possível conectar ao servidor.");
 
-	cout << "Conversa com servidor iniciada!" << endl;
+	Console::log("Conversa com o servidor iniciada!");
 
 	Server * server = new Server();
 	server->ssock = sock;
@@ -57,11 +50,11 @@ int main(int argc, char *argv[])
 
 		if (send(sock, buffer, strlen(buffer), 0) == SOCKET_ERROR)
 		{
-			cerr << "Não foi possível enviar dados para o servidor." << endl;
+			Console::error("Não foi possível enviar dados para o servidor.");
 			break;
 		}
 
-		cout << "Enviado para o servidor: " << buffer << endl;
+		Console::log("Enviado para o servidor: %s", buffer);
 	}
 
 	WSACleanup();
@@ -71,7 +64,7 @@ int main(int argc, char *argv[])
 
 void handleServer(Server *server)
 {
-	cout << "Iniciando escuta ao servidor..." << endl;
+	Console::log("Iniciando escuta ao servidor...");
 
 	char buffer[1024];
 	int bytes;
@@ -82,13 +75,13 @@ void handleServer(Server *server)
 
 		if (bytes == SOCKET_ERROR)
 		{
-			cerr << "Ocorreu um erro ao receber dados do servidor." << endl;
+			Console::error("Ocorreu um erro ao receber dados do servidor.");
 			break;
 		}
 
 		if (bytes < 0)
 		{
-			cerr << "A conexão com o servidor foi encerrada." << endl;
+			Console::error("A conexão com o servidor foi encerrada.");
 			return;
 		}
 
@@ -96,12 +89,12 @@ void handleServer(Server *server)
 		handleServerMessage(server, buffer, bytes);
 	}
 
-	cout << "Desconectando do servidor... ";
+	Console::log("Desconectando do servidor...");
 	closesocket(server->ssock);
-	cout << "OK" << endl;
+	Console::log("Desconectado.");
 }
 
 void handleServerMessage(Server *server, const char * message, size_t size)
 {
-	cout << "Servidor enviou: " << message << endl;
+	Console::writeLine("Servidor enviou: %s", message);
 }
