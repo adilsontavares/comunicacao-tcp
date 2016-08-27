@@ -1,0 +1,12 @@
+﻿  Source.cpp
+Source.obj : error LNK2001: unresolved external symbol __imp__htons@4
+Source.obj : error LNK2001: unresolved external symbol __imp__recv@16
+Source.obj : error LNK2001: unresolved external symbol __imp__socket@12
+Source.obj : error LNK2001: unresolved external symbol __imp__WSAStartup@8
+Source.obj : error LNK2001: unresolved external symbol __imp__inet_pton@12
+Source.obj : error LNK2001: unresolved external symbol __imp__listen@8
+Source.obj : error LNK2001: unresolved external symbol __imp__closesocket@4
+Source.obj : error LNK2001: unresolved external symbol __imp__bind@12
+Source.obj : error LNK2001: unresolved external symbol __imp__accept@12
+Source.obj : error LNK2001: unresolved external symbol __imp__WSACleanup@0
+C:\Users\adilson.tavares\Documents\GitHub\comunicacao-tcp\src\ComunicacaoTcp\Release\Server.exe : fatal error LNK1120: 10 unresolved externals
